@@ -34,13 +34,11 @@ The script performs the following tasks:
 
    ````bash
    nano /usr/local/bin/lxc-update.sh
-   ``` ```
-
    ````
 
 2. **Copy the below script if using nano:**
 
-```bash
+````bash
 #!/bin/bash
 
 # Ensure the script is run as root
@@ -96,23 +94,23 @@ for CTID in $CONTAINERS; do
 done
 
 echo "All updates completed: $(date)" >> "$LOGFILE"
-```
+````
 
 3. **Make the Script Executable**
 
 Change the permissions of the script to allow execution:
 
-```bash
+````bash
 chmod +x /usr/local/bin/lxc-update.sh
-```
+````
 
 4. **Test the Script**
 
 After making the script executable, run it manually to ensure it works correctly:
 
-```bash
+````bash
 /usr/local/bin/lxc-update.sh
-```
+````
 
 ## Usage
 
@@ -120,9 +118,9 @@ After making the script executable, run it manually to ensure it works correctly
 
 Run the script directly from the command line with root privileges:
 
-```bash
+````bash
 sudo /usr/local/bin/lxc-update.sh
-```
+````
 
 ### Scheduling with Cron
 
@@ -130,15 +128,15 @@ To automate the update process, you can schedule the script to run at regular in
 
 1. **Open the root user's crontab:**
 
-   ```bash
+   ````bash
    crontab -e
-   ```
+   ````
 
 2. **Add the following line to run the script daily at 3:00 AM:**
 
-   ```bash
+   ````bash
    0 3 * * * /usr/local/bin/lxc-update.sh
-   ```
+   ````
 
 3. **Save and exit the editor.**
 
