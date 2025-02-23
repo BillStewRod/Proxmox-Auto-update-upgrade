@@ -15,7 +15,7 @@ The script performs the following tasks:
 ## Features
 
 - **Comprehensive Updating:** Updates both the Proxmox host node and its containers.
-- **Selective Execution:** Skips containers that are not running and specifically excludes container ID 210.
+- **Selective Execution:** Skips containers that are not running and specifically excludes container ID 210 (I am trouble shooting this specific container, you can ommit this section on your script).
 - **Enhanced Logging:** Uses `tee` for real-time console output while appending details to a log file.
 - **Robust Parsing:** Extracts the number of upgraded packages using a more resilient pattern matching technique.
 - **Root Privilege Enforcement:** The script checks that it is run as root, ensuring all update commands execute successfully.
