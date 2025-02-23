@@ -5,6 +5,7 @@ This repository contains a Bash script designed to automatically update your Pro
 ## Overview
 
 The script performs the following tasks:
+
 - **Node Update:** Runs `apt update` and `apt upgrade -y` on the Proxmox host.
 - **Container Update:** Iterates over all LXC containers on the node, checks if each container is running, and then runs the update commands inside each container.
 - **Exclusion:** Skips the update for container ID 210.
@@ -31,19 +32,21 @@ The script performs the following tasks:
 
    You can either clone this repository or create the script manually. To create it manually, log into your Proxmox server and create a new file:
 
-   ```bash
+   ````bash
    nano /usr/local/bin/lxc-update.sh
-   ```
+   ``` ```
+
+   ````
 
 2. **Copy the below script if using nano:**
 
-  ```bash
+```bash
 #!/bin/bash
 
 # Ensure the script is run as root
 if [ "$EUID" -ne 0 ]; then
-  echo "This script must be run as root."
-  exit 1
+echo "This script must be run as root."
+exit 1
 fi
 
 # Log file for update output
@@ -67,29 +70,29 @@ CONTAINERS=$(pct list | awk 'NR>1 {print $1}')
 
 # Loop through each container and perform updates
 for CTID in $CONTAINERS; do
-    # Exclude container ID 210
-    if [ "$CTID" -eq 210 ]; then
-        echo "Skipping container $CTID (excluded)." | tee -a "$LOGFILE"
-        continue
-    fi
+  # Exclude container ID 210
+  if [ "$CTID" -eq 210 ]; then
+      echo "Skipping container $CTID (excluded)." | tee -a "$LOGFILE"
+      continue
+  fi
 
-    echo "Updating container ID: $CTID" | tee -a "$LOGFILE"
-    
-    # Check if the container is running
-    if pct status "$CTID" | grep -q "status: running"; then
-        # Run apt update and upgrade within the container
-        OUTPUT=$(pct exec "$CTID" -- bash -c "apt update && apt upgrade -y")
-        
-        # Extract the number of packages upgraded from the container output robustly
-        UPGRADED=$(echo "$OUTPUT" | grep -Eo '[0-9]+ upgraded' | head -n1 | awk '{print $1}')
-        UPGRADED=${UPGRADED:-0}
-        
-        echo "Container $CTID: $UPGRADED packages upgraded." | tee -a "$LOGFILE"
-    else
-        echo "Container $CTID is not running. Skipping." | tee -a "$LOGFILE"
-    fi
-    
-    echo "------------------------------------------" | tee -a "$LOGFILE"
+  echo "Updating container ID: $CTID" | tee -a "$LOGFILE"
+
+  # Check if the container is running
+  if pct status "$CTID" | grep -q "status: running"; then
+      # Run apt update and upgrade within the container
+      OUTPUT=$(pct exec "$CTID" -- bash -c "apt update && apt upgrade -y")
+
+      # Extract the number of packages upgraded from the container output robustly
+      UPGRADED=$(echo "$OUTPUT" | grep -Eo '[0-9]+ upgraded' | head -n1 | awk '{print $1}')
+      UPGRADED=${UPGRADED:-0}
+
+      echo "Container $CTID: $UPGRADED packages upgraded." | tee -a "$LOGFILE"
+  else
+      echo "Container $CTID is not running. Skipping." | tee -a "$LOGFILE"
+  fi
+
+  echo "------------------------------------------" | tee -a "$LOGFILE"
 done
 
 echo "All updates completed: $(date)" >> "$LOGFILE"
@@ -137,7 +140,7 @@ To automate the update process, you can schedule the script to run at regular in
    0 3 * * * /usr/local/bin/lxc-update.sh
    ```
 
-2. **Save and exit the editor.**
+3. **Save and exit the editor.**
 
 The script will now run automatically at the scheduled time, ensuring your Proxmox node and containers are regularly updated.
 
@@ -152,4 +155,3 @@ Contributions are welcome! Please feel free to fork the repository, open issues,
 ## Disclaimer
 
 Use this script at your own risk. The authors are not responsible for any damage or data loss that may occur as a result of using this script. Always test in a non-production environment before deploying to live systems.
-
