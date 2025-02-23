@@ -38,46 +38,46 @@ The script performs the following tasks:
 
 2. **Copy the below script if using nano:**
 
-````bash
-#!/bin/bash
+   ````bash
+   #!/bin/bash
+   
+   # Ensure the script is run as root
+   if [ "$EUID" -ne 0 ]; then
+   echo "This script must be run as root."
+   exit 1
+   fi
+   
+   # Log file for update output
+   LOGFILE="/var/log/lxc-update.log"
+   
+   # Start logging
+   echo "Starting updates for node and containers: $(date)" >> "$LOGFILE"
+   echo "------------------------------------------" >> "$LOGFILE"
+   
+   # Step 1: Update the Proxmox node (pve1)
+   echo "Updating Proxmox node (pve1)..." | tee -a "$LOGFILE"
+   NODE_OUTPUT=$(apt update && apt upgrade -y)
+   # Extract the number from the summary line that contains "upgraded"
+   NODE_UPGRADED=$(echo "$NODE_OUTPUT" | grep -Eo '[0-9]+ upgraded' | head -n1 | awk '{print $1}')
+   NODE_UPGRADED=${NODE_UPGRADED:-0}
+   echo "Proxmox node: $NODE_UPGRADED packages upgraded." | tee -a "$LOGFILE"
+   echo "------------------------------------------" | tee -a "$LOGFILE"
 
-# Ensure the script is run as root
-if [ "$EUID" -ne 0 ]; then
-echo "This script must be run as root."
-exit 1
-fi
+   # Step 2: Get a list of all LXC container IDs
+   CONTAINERS=$(pct list | awk 'NR>1 {print $1}')
 
-# Log file for update output
-LOGFILE="/var/log/lxc-update.log"
-
-# Start logging
-echo "Starting updates for node and containers: $(date)" >> "$LOGFILE"
-echo "------------------------------------------" >> "$LOGFILE"
-
-# Step 1: Update the Proxmox node (pve1)
-echo "Updating Proxmox node (pve1)..." | tee -a "$LOGFILE"
-NODE_OUTPUT=$(apt update && apt upgrade -y)
-# Extract the number from the summary line that contains "upgraded"
-NODE_UPGRADED=$(echo "$NODE_OUTPUT" | grep -Eo '[0-9]+ upgraded' | head -n1 | awk '{print $1}')
-NODE_UPGRADED=${NODE_UPGRADED:-0}
-echo "Proxmox node: $NODE_UPGRADED packages upgraded." | tee -a "$LOGFILE"
-echo "------------------------------------------" | tee -a "$LOGFILE"
-
-# Step 2: Get a list of all LXC container IDs
-CONTAINERS=$(pct list | awk 'NR>1 {print $1}')
-
-# Loop through each container and perform updates
-for CTID in $CONTAINERS; do
-  # Exclude container ID 210
-  if [ "$CTID" -eq 210 ]; then
+   # Loop through each container and perform updates
+   for CTID in $CONTAINERS; do
+     # Exclude container ID 210
+     if [ "$CTID" -eq 210 ]; then
       echo "Skipping container $CTID (excluded)." | tee -a "$LOGFILE"
       continue
-  fi
+     fi
 
-  echo "Updating container ID: $CTID" | tee -a "$LOGFILE"
+     echo "Updating container ID: $CTID" | tee -a "$LOGFILE"
 
-  # Check if the container is running
-  if pct status "$CTID" | grep -q "status: running"; then
+     # Check if the container is running
+     if pct status "$CTID" | grep -q "status: running"; then
       # Run apt update and upgrade within the container
       OUTPUT=$(pct exec "$CTID" -- bash -c "apt update && apt upgrade -y")
 
@@ -86,22 +86,22 @@ for CTID in $CONTAINERS; do
       UPGRADED=${UPGRADED:-0}
 
       echo "Container $CTID: $UPGRADED packages upgraded." | tee -a "$LOGFILE"
-  else
+     else
       echo "Container $CTID is not running. Skipping." | tee -a "$LOGFILE"
-  fi
+     fi
+   
+     echo "------------------------------------------" | tee -a "$LOGFILE"
+   done
 
-  echo "------------------------------------------" | tee -a "$LOGFILE"
-done
-
-echo "All updates completed: $(date)" >> "$LOGFILE"
-````
+   echo "All updates completed: $(date)" >> "$LOGFILE"
+   ````
 
 3. **Make the Script Executable**
 
 Change the permissions of the script to allow execution:
 
 ````bash
-chmod +x /usr/local/bin/lxc-update.sh
+chmod +x /usr/local/bin/update-node-and-containers.sh
 ````
 
 4. **Test the Script**
@@ -109,7 +109,7 @@ chmod +x /usr/local/bin/lxc-update.sh
 After making the script executable, run it manually to ensure it works correctly:
 
 ````bash
-/usr/local/bin/lxc-update.sh
+/usr/local/bin/update-node-and-containers.sh
 ````
 
 ## Usage
@@ -119,7 +119,7 @@ After making the script executable, run it manually to ensure it works correctly
 Run the script directly from the command line with root privileges:
 
 ````bash
-sudo /usr/local/bin/lxc-update.sh
+sudo /usr/local/bin/update-node-and-containerse.sh
 ````
 
 ### Scheduling with Cron
@@ -135,7 +135,7 @@ To automate the update process, you can schedule the script to run at regular in
 2. **Add the following line to run the script daily at 3:00 AM:**
 
    ````bash
-   0 3 * * * /usr/local/bin/lxc-update.sh
+   0 3 * * * /usr/local/bin/update-node-and-containers.sh
    ````
 
 3. **Save and exit the editor.**
